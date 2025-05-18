@@ -42,24 +42,28 @@ const root = {
   users: async () => {
     const users = await db("users");
 
-    return users.map(
-      (user: User) => new User(user.getId(), user.getName(), user.getEmail())
-    );
+    return users.map((user) => new User(user.id, user.name, user.email));
   },
-  postsByUser: async ({ userId }: any) => {
-    const posts = await db("posts").where({ userId });
+  postsByUser: async ({ userId }: { userId: number }) => {
+    const posts: { id: number; title: string; userId: number }[] = await db(
+      "posts"
+    ).where({ userId });
 
     const userFromDb = await db("users").where({ id: userId }).first();
     const user = new User(userFromDb.id, userFromDb.name, userFromDb.email);
 
-    return posts.map((post: any) => new Post(post.id, post.title, user));
+    return posts.map((post) => new Post(post.id, post.title, user));
   },
-  createUser: async ({ input }: any) => {
+  createUser: async ({ input }: { input: Omit<User, "id"> }) => {
     const [id] = await db("users").insert(input);
     return { id, ...input };
   },
 
-  createPost: async ({ input }: any) => {
+  createPost: async ({
+    input,
+  }: {
+    input: { id: number; title: string; userId: number };
+  }) => {
     const [id] = await db("posts").insert({
       title: input.title,
       userId: input.userId,
